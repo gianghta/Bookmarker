@@ -1,8 +1,8 @@
 {
-    "name": "Bookmark Manager",
-    "version": 0.1,
+    "name": "Save4Later",
+    "version": "0.1",
     "manifest_version": 2,
-    "description": "A nicer display of Google Chrome Bookmarks",
+    "description": "A list of save-for-later reading",
     "browser_action": {
         "default_popup": "popup.html"
     },
