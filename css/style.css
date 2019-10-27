@@ -1,28 +1,16 @@
 body {
-    width:400px;
-    height:300px;
+    width: 400px;
+    height: 300px;
 }
-
 .container {
     margin: 0;
     padding: 0;
-}
-
-.row {
-    padding: 0;
-    margin: 0;
-}
-
-.col-sm-4 {
-    padding: 0;
-    margin: 0;
 }
 
 .single {
     padding: 30px 15px;
     margin-top: 0px;
     background: #fcfcfc;
-    border: 1px solid #f0f0f0;
 }
 .single h3.side-title {
     margin: 0;
