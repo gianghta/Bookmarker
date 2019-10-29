@@ -37,6 +37,7 @@ body {
     
 .single ul {
     margin-bottom: 0;
+    margin-top: 20px;
 }
 .single li a {
     color: #666;
@@ -52,4 +53,8 @@ body {
 }
 .single li:last-child a {
     border-bottom: 0;
+}
+
+.link-count {
+    list-style: none;
 }
