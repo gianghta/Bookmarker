@@ -1,13 +1,97 @@
+// Chrome storage wrapper
+const storage = chrome.storage.sync;
+
 const addBtn = document.querySelector('#addBtn');
 const clearAllBtn = document.querySelector('#clearBtn');
 const ul = document.querySelector('.list-unstyled');
+const announcement = document.querySelector('#annoucement');
 
 console.log('Loaded resource');
 
-function addLink(tabs) {
-    let url = tabs[0].url;
-    let title = ` ${tabs[0].title}`;
-    let iconUrl = tabs[0].favIconUrl;
+document.addEventListener('DOMContentLoaded', getLinks);
+
+addBtn.addEventListener('click', () => {
+    chrome.tabs.query({'active': true, 'currentWindow': true}, function(tabs) {
+        const tab = tabs[0];
+
+        // Add link to the UI
+        UIaddLink(tab);
+        
+        // Add link to storage
+        const item = createLinkItem(tab);
+        addLinkToStorage(item);
+
+        console.log('Successfully add link');
+    });
+});
+
+ul.addEventListener('click', UIremoveLink);
+
+clearAllBtn.addEventListener('click', () => {
+    console.log('Clearing list...');
+});
+
+
+function getLinks() {
+    let syncItems = new Array();
+
+    storage.get(null, function(items) {
+        for (let key in items) {
+            let syncItem = {};
+            syncItem[key] = items[key];
+
+            if (isValidSyncItem(syncItem)) {
+                syncItem = items[keys];
+                syncItem.key = key;
+                syncItems.push(syncItem);
+            }
+        }
+    });
+
+    console.log('Start iterating through item list');
+
+    syncItems.forEach(function(syncItem) {
+        let url = syncItem.key;
+        let title = syncItem.title;
+        let iconUrl = syncItem.icon;
+
+        console.log(url);
+        console.log(title);
+        console.log(iconUrl);
+
+        // List item
+        const li = document.createElement('li');
+        li.className = 'd-flex justify-content-between align-items-center';
+
+        // Favicon
+        const icon = document.createElement('img');
+        icon.setAttribute('src', iconUrl);
+
+        // Title
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('target', '_blank');
+        const titleNode = document.createTextNode(title);
+
+        // Delete button
+        const deleteBtn = document.createElement('a');
+        deleteBtn.className = 'delete-item float-right fa fa-times';
+
+        // Setting up and adding link to the list
+        a.appendChild(icon);
+        a.appendChild(titleNode);
+        li.appendChild(a);
+        li.appendChild(deleteBtn);
+        ul.appendChild(li);
+    });
+
+    console.log('Finished loading tasks');
+}
+
+function UIaddLink(tab) {
+    let url = tab.url;
+    let title = ` ${tab.title}`;
+    let iconUrl = tab.favIconUrl;
 
     // List item
     const li = document.createElement('li');
@@ -35,35 +119,66 @@ function addLink(tabs) {
     ul.appendChild(li);
 }
 
-function removeLink(e) {
+function UIremoveLink(e) {
     if (e.target.classList.contains('delete-item')) {
         if (confirm('Are you sure?')) {
             e.target.parentElement.remove();
+            console.log(e.target.parentElement.firstChild.getAttribute('href'));
+            const url = e.target.parentElement.firstChild.getAttribute('href');
+            removeLinkFromStorage(url);
         }
     }
     console.log('Link removed');
 }
 
-function addLinkToStorage() {
-    
-}
-
-function removeLinkFromStorage() {
-
-}
-
-function loadLinkFromStorage() {
-
-}
-
-ul.addEventListener('click', removeLink);
-
-addBtn.addEventListener('click', () => {
-    chrome.tabs.query({'active': true, 'currentWindow': true}, function(tabs) {
-        addLink(tabs);
+function addLinkToStorage(urlItem) {
+    storage.get(urlItem.url, function(itemFound) {
+        if (!itemFound) {
+            itemExistHandler();
+        } else {
+            let item = {};
+            item[urlItem.url] = urlItem.info;
+            storage.set(item, () => {
+                console.log('Item is saved into database');
+            });
+        }
     });
-});
+}
 
-clearAllBtn.addEventListener('click', () => {
-    console.log('Clearing list...');
-});
+function removeLinkFromStorage(url) {
+    storage.get(url, function(urlFound) {
+        if (urlFound) {
+            storage.remove(url, () => {
+                console.log('Item successfully removed from storage');
+            });
+        } else {
+            console.log('Could not remove item from storage');
+        }
+    });
+}
+
+function itemExistHandler() {
+    const newMessage = document.createTextNode('Total Links: Link\'s is already existed');
+    if (announcement.childNodes[0]) {
+        announcement.replaceChild(newMessage, announcement.childNodes[0]);
+    }
+}
+
+function createLinkItem(tab) {
+    let urlInfo = {'title': tab.title, 'timestamp': new Date().getTime(), 'icon': tab.favIconUrl};
+    let urlItem = {'url': tab.url, 'info': urlInfo};
+    return urlItem;
+}
+
+function isValidSyncItem(syncItem) {
+    if (Object.keys(syncItem).length !== -1) {
+        return false;
+    }
+
+    for (let key in syncItem) {
+        if (typeof syncItem[key] !== 'object') {
+            return false;
+        }
+    }
+    return true;
+}
