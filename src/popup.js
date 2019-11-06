@@ -27,35 +27,31 @@ addBtn.addEventListener('click', () => {
 
 ul.addEventListener('click', UIremoveLink);
 
-clearAllBtn.addEventListener('click', () => {
-    console.log('Clearing list...');
-});
-
+clearAllBtn.addEventListener('click', clearSyncStorage);
 
 function getLinks() {
     let syncItems = new Array();
 
-    storage.get(null, function(items) {
+    storage.get(function(items) {
         for (let key in items) {
             let syncItem = {};
-            syncItem[key] = items[key];
-
-            if (isValidSyncItem(syncItem)) {
-                syncItem = items[keys];
-                syncItem.key = key;
-                syncItems.push(syncItem);
-            }
+            syncItem['url'] = key;
+            syncItem['info'] = items[key];
+            syncItems.push(syncItem);
         }
     });
+    console.log('New array:', syncItems);
 
-    console.log('Start iterating through item list');
+    for (let syncItem of syncItems) {
+        console.log(syncItem);
+    }
 
     syncItems.forEach(function(syncItem) {
-        let url = syncItem.key;
-        let title = syncItem.title;
-        let iconUrl = syncItem.icon;
+        console.log(syncItem);
+        let url = syncItem.url;
+        let title = syncItem.info.title ;
+        let iconUrl = syncItem.info.icon;
 
-        console.log(url);
         console.log(title);
         console.log(iconUrl);
 
@@ -133,7 +129,7 @@ function UIremoveLink(e) {
 
 function addLinkToStorage(urlItem) {
     storage.get(urlItem.url, function(itemFound) {
-        if (!itemFound) {
+        if (isValidSyncItem(itemFound)) {
             itemExistHandler();
         } else {
             let item = {};
@@ -155,6 +151,19 @@ function removeLinkFromStorage(url) {
             console.log('Could not remove item from storage');
         }
     });
+}
+
+function clearSyncStorage() {
+    let confirmation = confirm('Do you want to delete everything?');
+    if (confirmation) {
+        storage.clear(function() {
+            let error = chrome.runtime.lastError;
+            if (error) {
+                console.log(error);
+            }
+            console.log('All items cleared');
+        });
+    }
 }
 
 function itemExistHandler() {
