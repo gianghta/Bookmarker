@@ -8,7 +8,7 @@ const announcement = document.querySelector('#annoucement');
 
 console.log('Loaded resource');
 
-document.addEventListener('DOMContentLoaded', getLinks);
+document.addEventListener('DOMContentLoaded', getLinks(postLinkToUI));
 
 addBtn.addEventListener('click', () => {
     chrome.tabs.query({'active': true, 'currentWindow': true}, function(tabs) {
@@ -29,59 +29,61 @@ ul.addEventListener('click', UIremoveLink);
 
 clearAllBtn.addEventListener('click', clearSyncStorage);
 
-function getLinks() {
-    let syncItems = new Array();
+function postLinkToUI(syncItems) {
+    setTimeout(() => {
+        syncItems.forEach(function(syncItem) {
+            console.log(syncItem);
+            let url = syncItem.url;
+            let title = syncItem.info.title;
+            let iconUrl = syncItem.info.icon;
+    
+            console.log(title);
+            console.log(iconUrl);
+    
+            // List item
+            const li = document.createElement('li');
+            li.className = 'd-flex justify-content-between align-items-center';
+    
+            // Favicon
+            const icon = document.createElement('img');
+            icon.setAttribute('src', iconUrl);
+    
+            // Title
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('target', '_blank');
+            const titleNode = document.createTextNode(title);
+    
+            // Delete button
+            const deleteBtn = document.createElement('a');
+            deleteBtn.className = 'delete-item float-right fa fa-times';
+    
+            // Setting up and adding link to the list
+            a.appendChild(icon);
+            a.appendChild(titleNode);
+            li.appendChild(a);
+            li.appendChild(deleteBtn);
+            ul.appendChild(li);
+        });
+    
+        console.log('Finished loading tasks');
+    }, 1000);
+}
 
-    storage.get(function(items) {
-        for (let key in items) {
-            let syncItem = {};
-            syncItem['url'] = key;
-            syncItem['info'] = items[key];
-            syncItems.push(syncItem);
-        }
-    });
-    console.log('New array:', syncItems);
+function getLinks(callback) {
+    setTimeout(function() {
+        let syncItems = new Array();
 
-    for (let syncItem of syncItems) {
-        console.log(syncItem);
-    }
-
-    syncItems.forEach(function(syncItem) {
-        console.log(syncItem);
-        let url = syncItem.url;
-        let title = syncItem.info.title ;
-        let iconUrl = syncItem.info.icon;
-
-        console.log(title);
-        console.log(iconUrl);
-
-        // List item
-        const li = document.createElement('li');
-        li.className = 'd-flex justify-content-between align-items-center';
-
-        // Favicon
-        const icon = document.createElement('img');
-        icon.setAttribute('src', iconUrl);
-
-        // Title
-        const a = document.createElement('a');
-        a.setAttribute('href', url);
-        a.setAttribute('target', '_blank');
-        const titleNode = document.createTextNode(title);
-
-        // Delete button
-        const deleteBtn = document.createElement('a');
-        deleteBtn.className = 'delete-item float-right fa fa-times';
-
-        // Setting up and adding link to the list
-        a.appendChild(icon);
-        a.appendChild(titleNode);
-        li.appendChild(a);
-        li.appendChild(deleteBtn);
-        ul.appendChild(li);
-    });
-
-    console.log('Finished loading tasks');
+        storage.get(function(items) {
+            for (let key in items) {
+                let syncItem = {};
+                syncItem['url'] = key;
+                syncItem['info'] = items[key];
+                syncItems.push(syncItem);
+            }
+        });
+        callback(syncItems);
+    }, 500);
 }
 
 function UIaddLink(tab) {
@@ -156,6 +158,13 @@ function removeLinkFromStorage(url) {
 function clearSyncStorage() {
     let confirmation = confirm('Do you want to delete everything?');
     if (confirmation) {
+
+        // Remove current list item on the UI
+        while(ul.firstChild) {
+            ul.removeChild(ul.firstChild);
+        }
+
+        // Remove current list item in the storage
         storage.clear(function() {
             let error = chrome.runtime.lastError;
             if (error) {
