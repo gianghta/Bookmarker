@@ -15,3 +15,8 @@ A Chrome extension library to save all your must-read list in Chrome storage ins
 - [ ] Fix favicon bug size
 - [ ] List refresh latency problem(callback)
 - [ ] Refactor code to module
+
+## License
+Licensed under MIT License
+
+See [LICENSE.md](./LICENSE.md) for more information.
